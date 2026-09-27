@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dados Crinos</title>
+<meta name="description" content="Tirador de dados del Club de Rol Crinos">
+<meta name="theme-color" content="#141414">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<style>
+  :root { --fondo: #141414; --superficie: #1f1f1f; --borde: #333; --texto: #eee; --suave: #9a9a9a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fondo); color: var(--texto); font-family: system-ui, sans-serif; }
+  .pagina { max-width: 480px; margin: 0 auto; padding: 16px; min-height: 100dvh; display: flex; flex-direction: column; gap: 16px; }
+  header { display: flex; align-items: center; gap: 14px; }
+  .logo { width: 72px; height: 72px; border-radius: 50%; background: #fff; flex: none; }
+  h1 { margin: 0; font-size: 1.5rem; }
+  header p { margin: 2px 0 0; color: var(--suave); }
+  .tarjeta { flex: 1; min-height: 240px; border-radius: 16px; background: var(--superficie); border: 1px solid var(--borde);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;
+    transition: background .2s, color .2s; }
+  .numero { font-size: 5.5rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+  .nombre { font-size: 2rem; font-weight: 700; margin: 12px 0 4px; }
+  .texto, .dif { margin: 0; }
+  .dif { margin-top: 10px; opacity: .75; font-size: .9rem; }
+  .botones { display: grid; gap: 10px; }
+  button { font: inherit; font-size: 1.2rem; font-weight: 600; min-height: 56px; border-radius: 12px; cursor: pointer;
+    background: var(--superficie); color: var(--texto); border: 1px solid var(--borde); }
+  button:active { background: #2c2c2c; }
+  button:focus-visible { outline: 3px solid #8ab4f8; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="pagina">
+  <header>
+    <img class="logo" src="logo.png" alt="Logo de la Asociación de Rol Crinos">
+    <div>
+      <h1>Tirador de dados</h1>
+      <p>Club de Rol Crinos</p>
+    </div>
+  </header>
+
+  <section class="tarjeta" id="tarjeta">
+    <div class="numero" id="numero" aria-hidden="true">🎲</div>
+    <div id="resumen" aria-live="polite">
+      <p class="nombre" id="nombre">¿En qué dificultad tiras?</p>
+      <p class="texto" id="texto">Toca una abajo y te tiro el d100</p>
+      <p class="dif" id="dif"></p>
+    </div>
+  </section>
+
+  <div class="botones" id="botones"></div>
+</div>
+
+<script src="dados.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const sinAnimacion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const d100 = () => Math.floor(Math.random() * 100) + 1;
+  let animacion;
+
+  for (const dif of Object.keys(DIFICULTADES)) {
+    const boton = document.createElement('button');
+    boton.textContent = dif;
+    boton.onclick = () => tirar(dif);
+    $('botones').append(boton);
+  }
+
+  function tirar(dif) {
+    const tirada = d100();
+    const r = resultado(dif, tirada);
+    let vueltas = sinAnimacion ? 1 : 8;
+    clearInterval(animacion);
+    Object.assign($('tarjeta').style, { background: '', color: '' });
+    $('resumen').style.visibility = 'hidden';
+    animacion = setInterval(() => {
+      if (--vueltas > 0) { $('numero').textContent = d100(); return; }
+      clearInterval(animacion);
+      $('resumen').style.visibility = '';
+      $('numero').textContent = tirada;
+      Object.assign($('tarjeta').style, { background: r.fondo, color: r.tinta });
+      $('nombre').textContent = r.nombre;
+      $('texto').textContent = r.texto;
+      $('dif').textContent = `${dif} · has sacado ${tirada}`;
+    }, 50);
+  }
+</script>
+</body>
+</html>
